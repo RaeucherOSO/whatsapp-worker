@@ -5593,25 +5593,19 @@ def worker_main():
 # ============================================================
 
 if __name__ == "__main__":
-
     try:
-
+        print("=== WHATSAPP WORKER STARTET ===", flush=True)
         worker_main()
 
     except KeyboardInterrupt:
-
         shutdown_requested = True
-
         logger.info(
             "Worker durch Benutzer beendet."
         )
-
         sys.exit(0)
 
     except Exception:
-
         logger.exception(
             "Worker wurde aufgrund eines kritischen Fehlers beendet."
         )
-
         sys.exit(1)

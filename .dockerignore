@@ -10,5 +10,4 @@ __pycache__
 .vscode
 .idea
 
-# Das WhatsApp-Profil darf NICHT ins Docker-Image
 whatsapp_browser
