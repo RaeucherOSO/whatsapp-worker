@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright/python:v1.48.0-jammy
+FROM mcr.microsoft.com/playwright/python:v1.63.0-jammy
 
 ENV PLAYWRIGHT_BROWSERS_PATH=0
 ENV PYTHONUNBUFFERED=1
