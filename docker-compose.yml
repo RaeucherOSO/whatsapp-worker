@@ -1,0 +1,31 @@
+services:
+
+  whatsapp-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: whatsapp-worker
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      BROWSER_DIR: /app/whatsapp_browser
+
+    ports:
+      - "127.0.0.1:8080:8080"
+
+    volumes:
+      - ./whatsapp_browser:/app/whatsapp_browser
+
+    shm_size: "1gb"
+
+    init: true
+
+    stop_grace_period: 30s
+
+    security_opt:
+      - no-new-privileges:true
