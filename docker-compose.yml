@@ -16,7 +16,7 @@ services:
       BROWSER_DIR: /app/whatsapp_browser
 
     ports:
-      - "127.0.0.1:8080:8080"
+      - "8080:8080"
 
     volumes:
       - ./whatsapp_browser:/app/whatsapp_browser
