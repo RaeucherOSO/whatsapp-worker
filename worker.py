@@ -5608,4 +5608,4 @@ if __name__ == "__main__":
         logger.exception(
             "Worker wurde aufgrund eines kritischen Fehlers beendet."
         )
-        sys.exit(1)
+        sys.exit(1) 
