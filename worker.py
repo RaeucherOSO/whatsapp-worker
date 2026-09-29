@@ -22,7 +22,7 @@ from playwright.sync_api import sync_playwright
 # VERSION
 # ============================================================
 
-VERSION = "2026-09-29-QR-FIX-02"
+VERSION = "2026-09-29-QR-FIX-03"
 
 
 # ============================================================
@@ -1527,83 +1527,33 @@ def is_logged_in(
 # SCREENSHOT
 # ============================================================
 
-def save_screenshot(
-    page,
-):
-
+def save_screenshot(page):
     global last_screenshot_time
 
-
     try:
-
-        screenshot_path = Path(
-            QR_SCREENSHOT
-        )
-
-
-        screenshot_path.parent.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
-
-
         page.screenshot(
-            path=str(
-                screenshot_path
-            ),
+            path=QR_SCREENSHOT,
             full_page=False,
+            timeout=5000,
         )
 
-
-        if not screenshot_path.exists():
-
-            logger.error(
-                "Playwright meldete Screenshot-Erfolg, "
-                "aber Datei existiert nicht: %s",
-                screenshot_path,
-            )
-
-            return False
-
-
-        file_size = screenshot_path.stat().st_size
-
-
-        if file_size <= 0:
-
-            logger.error(
-                "Screenshot-Datei ist leer: %s",
-                screenshot_path,
-            )
-
-            return False
-
-
-        last_screenshot_time = (
-            time.time()
-        )
-
+        last_screenshot_time = time.time()
 
         logger.info(
-            "Screenshot gespeichert: %s (%s Bytes)",
-            screenshot_path,
-            file_size,
+            "QR-Screenshot erfolgreich gespeichert: %s",
+            QR_SCREENSHOT,
         )
-
 
         return True
 
-
     except Exception as e:
-
-        logger.exception(
+        logger.error(
             "Screenshot konnte NICHT erstellt werden: %s",
             e,
+            exc_info=True,
         )
 
-
         return False
-
 
 # ============================================================
 # AUF LOGIN WARTEN
