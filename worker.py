@@ -470,34 +470,59 @@ def index():
 @app.route("/qr")
 def qr():
 
+    # --------------------------------------------------------
+    # QR-ACCESS-TOKEN PRÜFEN
+    # --------------------------------------------------------
+
     if QR_ACCESS_TOKEN:
 
-        token = QR_ACCESS_TOKEN
-
-        if request.args.get(
-            "token"
-        ) != token:
-
-            return Response(
-                "Unauthorized",
-                status=401,
-            )
-
-    if os.path.exists(
-        QR_SCREENSHOT
-    ):
-
-        return send_file(
-            QR_SCREENSHOT,
-            mimetype="image/png",
-            max_age=0,
+        token = request.args.get(
+            "token",
+            "",
         )
 
-    return Response(
-        "Noch kein Screenshot verfügbar.",
-        status=404,
+        if token != QR_ACCESS_TOKEN:
+
+            return (
+                "Unauthorized",
+                401,
+            )
+
+    # --------------------------------------------------------
+    # AKTUELLEN SCREENSHOT AUSLIEFERN
+    # --------------------------------------------------------
+
+    screenshot_path = Path(
+        "/tmp/whatsapp_qr.png"
     )
 
+    if not screenshot_path.exists():
+
+        return (
+            "QR-Screenshot noch nicht verfügbar.",
+            404,
+        )
+
+    try:
+
+        return send_file(
+            screenshot_path,
+            mimetype="image/png",
+            max_age=0,
+            conditional=False,
+        )
+
+    except Exception as e:
+
+        logger.exception(
+            "Fehler beim Ausliefern des QR-Screenshots: %s",
+            e,
+        )
+
+        return (
+            "QR-Screenshot konnte nicht geladen werden.",
+            500,
+        )
 
 # ============================================================
 # STATUS
