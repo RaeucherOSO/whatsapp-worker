@@ -4030,11 +4030,15 @@ def open_chat(
     )
 
 
-    page.goto(
-        url,
-        wait_until="domcontentloaded",
-        timeout=60000,
-    )
+    logger.info("WHATSAPP GOTO START")
+
+page.goto(
+    "https://web.whatsapp.com/",
+    wait_until="domcontentloaded",
+    timeout=60000,
+)
+
+logger.info("WHATSAPP GOTO ENDE")
 
 
     close_whatsapp_popups(
