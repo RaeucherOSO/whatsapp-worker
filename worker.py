@@ -22,7 +22,7 @@ from playwright.sync_api import sync_playwright
 # VERSION
 # ============================================================
 
-VERSION = "2026-09-29-QR-FIX-03"
+VERSION = "2026-09-29-QR-DIAG-01"
 
 
 # ============================================================
@@ -1531,6 +1531,18 @@ def save_screenshot(page):
     global last_screenshot_time
 
     try:
+        logger.info("SCREENSHOT TEST: URL=%s", page.url)
+
+        logger.info(
+            "SCREENSHOT TEST: viewport=%s",
+            page.viewport_size,
+        )
+
+        logger.info(
+            "SCREENSHOT TEST: title=%s",
+            page.title(timeout=3000),
+        )
+
         page.screenshot(
             path=QR_SCREENSHOT,
             full_page=False,
@@ -1540,7 +1552,7 @@ def save_screenshot(page):
         last_screenshot_time = time.time()
 
         logger.info(
-            "QR-Screenshot erfolgreich gespeichert: %s",
+            "SCREENSHOT TEST: ERFOLGREICH -> %s",
             QR_SCREENSHOT,
         )
 
@@ -1548,146 +1560,12 @@ def save_screenshot(page):
 
     except Exception as e:
         logger.error(
-            "Screenshot konnte NICHT erstellt werden: %s",
+            "SCREENSHOT TEST: FEHLER -> %s",
             e,
             exc_info=True,
         )
 
         return False
-
-# ============================================================
-# AUF LOGIN WARTEN
-# ============================================================
-
-def wait_for_login(
-    page,
-):
-
-    global login_status
-
-
-    logger.info(
-        "Warte auf WhatsApp-Login..."
-    )
-
-
-    started = time.time()
-
-
-    screenshot_number = 0
-
-
-    while not shutdown_requested:
-
-        screenshot_success = save_screenshot(
-            page
-        )
-
-
-        screenshot_number += 1
-
-
-        if (
-            screenshot_number == 1
-            and not screenshot_success
-        ):
-
-            logger.warning(
-                "ERSTER QR-SCREENSHOT FEHLGESCHLAGEN."
-            )
-
-
-        try:
-
-            close_whatsapp_popups(
-                page
-            )
-
-        except Exception:
-            pass
-
-
-        try:
-
-            if is_logged_in(
-                page
-            ):
-
-                login_status = (
-                    "logged_in"
-                )
-
-
-                logger.info(
-                    "WhatsApp-Login erkannt."
-                )
-
-
-                return True
-
-
-            login_status = (
-                "qr_ready"
-            )
-
-
-            if (
-                screenshot_number
-                % 10
-                == 0
-            ):
-
-                logger.info(
-                    "WhatsApp wartet noch auf Anmeldung. "
-                    "Screenshot #%s | verfügbar=%s",
-                    screenshot_number,
-                    os.path.exists(
-                        QR_SCREENSHOT
-                    ),
-                )
-
-
-        except Exception as e:
-
-            logger.debug(
-                "Loginprüfung Fehler: %s",
-                e,
-            )
-
-
-        if (
-            LOGIN_TIMEOUT_SECONDS
-            > 0
-        ):
-
-            elapsed = (
-                time.time()
-                - started
-            )
-
-
-            if (
-                elapsed
-                >= LOGIN_TIMEOUT_SECONDS
-            ):
-
-                logger.error(
-                    "Login-Timeout nach %s Sekunden.",
-                    LOGIN_TIMEOUT_SECONDS,
-                )
-
-
-                return False
-
-
-        time.sleep(
-            1
-        )
-
-
-    return False
-
-
 # ============================================================
 # TEXT NORMALISIERUNG
 # ============================================================
