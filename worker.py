@@ -4023,28 +4023,14 @@ def open_chat(
         f"?phone={phone}"
     )
 
-
     logger.info(
         "Öffne WhatsApp-Chat: %s",
         phone,
     )
 
-
-    logger.info("WHATSAPP GOTO START")
-
-page.goto(
-    "https://web.whatsapp.com/",
-    wait_until="domcontentloaded",
-    timeout=60000,
-)
-
-logger.info("WHATSAPP GOTO ENDE")
-
-
     close_whatsapp_popups(
         page
     )
-
 
     compose_selectors = [
 
@@ -4053,12 +4039,10 @@ logger.info("WHATSAPP GOTO ENDE")
         '[contenteditable="true"][data-tab]',
     ]
 
-
     deadline = (
         time.time()
         + 30
     )
-
 
     while (
         time.time()
@@ -4069,7 +4053,6 @@ logger.info("WHATSAPP GOTO ENDE")
             page
         )
 
-
         for selector in compose_selectors:
 
             try:
@@ -4078,9 +4061,7 @@ logger.info("WHATSAPP GOTO ENDE")
                     selector
                 )
 
-
                 count = locator.count()
-
 
                 for i in range(
                     count
@@ -4092,26 +4073,21 @@ logger.info("WHATSAPP GOTO ENDE")
                             i
                         )
 
-
                         if element.is_visible(
                             timeout=500
                         ):
 
                             return element
 
-
                     except Exception:
                         pass
-
 
             except Exception:
                 pass
 
-
         time.sleep(
             0.5
         )
-
 
     raise RuntimeError(
         "Nachrichtenfeld wurde nach "
@@ -5200,11 +5176,9 @@ def prepare_whatsapp_session(
 
     global login_status
 
-
     logger.info(
-        "Öffne WhatsApp Web..."
+        "WHATSAPP GOTO START"
     )
-
 
     page.goto(
         "https://web.whatsapp.com/",
@@ -5212,31 +5186,34 @@ def prepare_whatsapp_session(
         timeout=60000,
     )
 
+    logger.info(
+        "WHATSAPP GOTO ENDE"
+    )
 
     logged_in = wait_for_login(
         page
     )
 
+    logger.info(
+        "WAIT_FOR_LOGIN ENDE: %s",
+        logged_in,
+    )
 
     if not logged_in:
 
         login_status = "error"
 
-
         raise RuntimeError(
             "WhatsApp konnte nicht angemeldet werden."
         )
-
 
     close_whatsapp_popups(
         page
     )
 
-
     login_status = (
         "logged_in"
     )
-
 
     logger.info(
         "WhatsApp ist bereit."
@@ -5556,7 +5533,7 @@ def worker_main():
 
 
     logger.info(
-        "=================================================="
+        
     )
 
 
