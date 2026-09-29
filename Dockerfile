@@ -1,21 +1,24 @@
-FROM mcr.microsoft.com/playwright/python:v1.63.0-jammy
+FROM mcr.microsoft.com/playwright/python:v1.48.0-jammy
 
-ENV PLAYWRIGHT_BROWSERS_PATH=0 \
-    PYTHONUNBUFFERED=1 \
+ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PORT=8080
+    PORT=8080 \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 WORKDIR /app
 
 COPY requirements.txt .
 
-RUN python3 -m pip install --no-cache-dir -r requirements.txt \
-    && python3 -c "import playwright; print('PLAYWRIGHT OK')"
+RUN python3 -m pip install --no-cache-dir \
+    Flask \
+    psycopg2-binary \
+    python-dotenv \
+    playwright==1.48.0
 
 COPY worker.py .
 
 RUN mkdir -p /app/whatsapp_browser \
-    && chown -R 1000:1000 /app
+    && chown -R pwuser:pwuser /app
 
 VOLUME ["/app/whatsapp_browser"]
 
@@ -23,4 +26,4 @@ EXPOSE 8080
 
 USER pwuser
 
-CMD ["xvfb-run", "-a", "python", "worker.py"]
+CMD ["xvfb-run", "-a", "python3", "worker.py"]
