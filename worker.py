@@ -259,7 +259,7 @@ signal.signal(
 # FLASK WEBSEITE
 # ============================================================
 
-HTML_PAGE = """
+HTML_PAGE = f"""
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -358,10 +358,10 @@ HTML_PAGE = """
 
     <div>
         <img
-            id="qr"
-            src="/qr"
-            alt="WhatsApp Screenshot"
-        >
+    id="qr"
+    src="/qr?token={QR_ACCESS_TOKEN}"
+    alt="WhatsApp Screenshot"
+>
     </div>
 
     <p class="small">
@@ -422,15 +422,15 @@ HTML_PAGE = """
         }
 
 
-        function updateScreenshot() {
+function updateScreenshot() {
 
-            const image =
-                document.getElementById("qr");
+    const image =
+        document.getElementById("qr");
 
-            image.src =
-                "/qr?t="
-                + new Date().getTime();
-        }
+    image.src =
+        "/qr?token={QR_ACCESS_TOKEN}&t="
+        + new Date().getTime();
+}
 
 
         updateStatus();
@@ -470,59 +470,34 @@ def index():
 @app.route("/qr")
 def qr():
 
-    # --------------------------------------------------------
-    # QR-ACCESS-TOKEN PRÜFEN
-    # --------------------------------------------------------
-
     if QR_ACCESS_TOKEN:
 
-        token = request.args.get(
-            "token",
-            "",
-        )
+        token = QR_ACCESS_TOKEN
 
-        if token != QR_ACCESS_TOKEN:
+        if request.args.get(
+            "token"
+        ) != token:
 
-            return (
+            return Response(
                 "Unauthorized",
-                401,
+                status=401,
             )
 
-    # --------------------------------------------------------
-    # AKTUELLEN SCREENSHOT AUSLIEFERN
-    # --------------------------------------------------------
-
-    screenshot_path = Path(
-        "/tmp/whatsapp_qr.png"
-    )
-
-    if not screenshot_path.exists():
-
-        return (
-            "QR-Screenshot noch nicht verfügbar.",
-            404,
-        )
-
-    try:
+    if os.path.exists(
+        QR_SCREENSHOT
+    ):
 
         return send_file(
-            screenshot_path,
+            QR_SCREENSHOT,
             mimetype="image/png",
             max_age=0,
-            conditional=False,
         )
 
-    except Exception as e:
+    return Response(
+        "Noch kein Screenshot verfügbar.",
+        status=404,
+    )
 
-        logger.exception(
-            "Fehler beim Ausliefern des QR-Screenshots: %s",
-            e,
-        )
-
-        return (
-            "QR-Screenshot konnte nicht geladen werden.",
-            500,
-        )
 
 # ============================================================
 # STATUS
@@ -5618,19 +5593,25 @@ def worker_main():
 # ============================================================
 
 if __name__ == "__main__":
+
     try:
-        print("=== WHATSAPP WORKER STARTET ===", flush=True)
+
         worker_main()
 
     except KeyboardInterrupt:
+
         shutdown_requested = True
+
         logger.info(
             "Worker durch Benutzer beendet."
         )
+
         sys.exit(0)
 
     except Exception:
+
         logger.exception(
             "Worker wurde aufgrund eines kritischen Fehlers beendet."
         )
-        sys.exit(1) 
+
+        sys.exit(1)
