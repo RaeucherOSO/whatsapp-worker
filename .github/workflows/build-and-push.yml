@@ -35,5 +35,6 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
+            tags: |
             ghcr.io/raeucherosO/whatsapp-worker:latest
             ghcr.io/raeucherosO/whatsapp-worker:${{ github.sha }}
