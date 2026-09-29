@@ -19,6 +19,13 @@ from playwright.sync_api import sync_playwright
 
 
 # ============================================================
+# VERSION
+# ============================================================
+
+VERSION = "2026-09-29-QR-FIX-02"
+
+
+# ============================================================
 # KONFIGURATION
 # ============================================================
 
@@ -300,6 +307,7 @@ HTML_PAGE = """
             max-width: 100%;
             border-radius: 8px;
             border: 1px solid #444;
+            display: block;
         }
 
         .small {
@@ -358,10 +366,10 @@ HTML_PAGE = """
 
     <div>
         <img
-    id="qr"
-    src="/qr?token=__QR_ACCESS_TOKEN__"
-    alt="WhatsApp Screenshot"
->
+            id="qr"
+            src="/qr?token=__QR_ACCESS_TOKEN__"
+            alt="WhatsApp Screenshot"
+        >
     </div>
 
     <p class="small">
@@ -373,7 +381,7 @@ HTML_PAGE = """
 
         async function updateStatus() {
 
-            try :
+            try {
 
                 const response =
                     await fetch("/status");
@@ -422,15 +430,15 @@ HTML_PAGE = """
         }
 
 
-function updateScreenshot() {
+        function updateScreenshot() {
 
-    const image =
-        document.getElementById("qr");
+            const image =
+                document.getElementById("qr");
 
-    image.src =
-        "/qr?token=__QR_ACCESS_TOKEN__&t="
-        + new Date().getTime();
-}
+            image.src =
+                "/qr?token=__QR_ACCESS_TOKEN__&t="
+                + new Date().getTime();
+        }
 
 
         updateStatus();
@@ -454,13 +462,16 @@ function updateScreenshot() {
 </html>
 """
 
+
 HTML_PAGE = HTML_PAGE.replace(
     "__QR_ACCESS_TOKEN__",
     QR_ACCESS_TOKEN,
 )
 
+
 @app.route("/")
 def index():
+
     return Response(
         HTML_PAGE,
         mimetype="text/html",
@@ -482,23 +493,58 @@ def qr():
             "token"
         ) != token:
 
+            logger.warning(
+                "Ungültiger QR-Zugriff."
+            )
+
             return Response(
                 "Unauthorized",
                 status=401,
             )
 
+
     if os.path.exists(
         QR_SCREENSHOT
     ):
 
-        return send_file(
-            QR_SCREENSHOT,
-            mimetype="image/png",
-            max_age=0,
-        )
+        try:
+
+            logger.debug(
+                "QR-Screenshot ausgeliefert: %s",
+                QR_SCREENSHOT,
+            )
+
+            return send_file(
+                QR_SCREENSHOT,
+                mimetype="image/png",
+                max_age=0,
+                conditional=False,
+            )
+
+        except Exception as e:
+
+            logger.exception(
+                "QR-Screenshot konnte nicht ausgeliefert werden: %s",
+                e,
+            )
+
+            return Response(
+                "Screenshot konnte nicht ausgeliefert werden.",
+                status=500,
+            )
+
+
+    logger.warning(
+        "QR-Anfrage: Screenshot existiert noch nicht: %s",
+        QR_SCREENSHOT,
+    )
+
 
     return Response(
-        "Noch kein Screenshot verfügbar.",
+        (
+            "Noch kein Screenshot verfügbar. "
+            f"Pfad={QR_SCREENSHOT}"
+        ),
         status=404,
     )
 
@@ -510,7 +556,15 @@ def qr():
 @app.route("/status")
 def status():
 
+    screenshot_exists = os.path.exists(
+        QR_SCREENSHOT
+    )
+
+
     return jsonify({
+
+        "version":
+            VERSION,
 
         "status":
             login_status,
@@ -522,9 +576,10 @@ def status():
             browser_page is not None,
 
         "screenshot_available":
-            os.path.exists(
-                QR_SCREENSHOT
-            ),
+            screenshot_exists,
+
+        "screenshot_path":
+            QR_SCREENSHOT,
 
         "last_screenshot":
             last_screenshot_time,
@@ -564,10 +619,14 @@ def health():
         ]
     )
 
+
     return jsonify({
 
         "healthy":
             healthy,
+
+        "version":
+            VERSION,
 
         "status":
             login_status,
@@ -578,11 +637,17 @@ def health():
         "browser_available":
             browser_page is not None,
 
+        "screenshot_available":
+            os.path.exists(
+                QR_SCREENSHOT
+            ),
+
         "uptime_seconds":
             int(
                 time.time()
                 - worker_started_at
             ),
+
     }), (
         200
         if healthy
@@ -599,6 +664,10 @@ def start_webserver():
     logger.info(
         "QR-Webseite gestartet auf Port %s.",
         QR_WEB_PORT,
+    )
+
+    logger.info(
+        "QR-Webseite erreichbar über /"
     )
 
     app.run(
@@ -623,18 +692,23 @@ def get_db_connection():
             "SUPABASE_DB_URL fehlt."
         )
 
+
     conn = psycopg2.connect(
         SUPABASE_DB_URL,
         connect_timeout=10,
     )
 
+
     conn.autocommit = False
 
+
     db_connected = True
+
 
     logger.info(
         "Datenbankverbindung hergestellt."
     )
+
 
     return conn
 
@@ -648,10 +722,12 @@ def close_db_connection(
     if conn:
 
         try:
+
             conn.close()
 
         except Exception:
             pass
+
 
     db_connected = False
 
@@ -664,9 +740,11 @@ def reconnect_db(
         "Versuche Datenbankverbindung neu aufzubauen."
     )
 
+
     close_db_connection(
         conn
     )
+
 
     while not shutdown_requested:
 
@@ -691,6 +769,7 @@ def reconnect_db(
                 DB_RECONNECT_SECONDS
             )
 
+
     return None
 
 
@@ -702,10 +781,13 @@ def ensure_db_connection(
 
         return get_db_connection()
 
+
     try:
 
         if conn.closed:
+
             return get_db_connection()
+
 
         with conn.cursor() as cur:
 
@@ -715,7 +797,9 @@ def ensure_db_connection(
 
             cur.fetchone()
 
+
         return conn
+
 
     except Exception as e:
 
@@ -724,11 +808,14 @@ def ensure_db_connection(
             e,
         )
 
+
         try:
+
             conn.rollback()
 
         except Exception:
             pass
+
 
         return reconnect_db(
             conn
@@ -751,6 +838,7 @@ def update_order(
     fields = []
     values = []
 
+
     if status is not None:
 
         fields.append(
@@ -760,6 +848,7 @@ def update_order(
         values.append(
             status
         )
+
 
     if kontakte is not None:
 
@@ -774,6 +863,7 @@ def update_order(
             )
         )
 
+
     if gesendet is not None:
 
         fields.append(
@@ -783,6 +873,7 @@ def update_order(
         values.append(
             gesendet
         )
+
 
     if fehler is not None:
 
@@ -794,13 +885,16 @@ def update_order(
             fehler
         )
 
+
     fields.append(
         "aktualisiert_am = NOW()"
     )
 
+
     values.append(
         order_id
     )
+
 
     sql = f"""
         UPDATE "{DB_SCHEMA}"."{DB_TABLE}"
@@ -808,12 +902,14 @@ def update_order(
         WHERE id = %s
     """
 
+
     with conn.cursor() as cur:
 
         cur.execute(
             sql,
             values,
         )
+
 
     conn.commit()
 
@@ -842,6 +938,7 @@ def get_next_order(
         LIMIT 1
     """
 
+
     with conn.cursor() as cur:
 
         cur.execute(
@@ -850,8 +947,11 @@ def get_next_order(
 
         row = cur.fetchone()
 
+
     if not row:
+
         return None
+
 
     (
         order_id,
@@ -864,6 +964,7 @@ def get_next_order(
         aktualisiert_am,
     ) = row
 
+
     if isinstance(
         kontakte,
         str,
@@ -872,6 +973,7 @@ def get_next_order(
         kontakte = json.loads(
             kontakte
         )
+
 
     return {
 
@@ -915,9 +1017,11 @@ def set_contact_phase(
 
     kontakt = kontakte[index]
 
+
     kontakt[
         "_send_phase"
     ] = phase
+
 
     try:
 
@@ -927,6 +1031,7 @@ def set_contact_phase(
             kontakte=kontakte,
         )
 
+
     except Exception as e:
 
         logger.warning(
@@ -935,7 +1040,9 @@ def set_contact_phase(
             e,
         )
 
+
         try:
+
             conn.rollback()
 
         except Exception:
@@ -951,13 +1058,17 @@ def normalize_phone(
 ):
 
     if phone is None:
+
         return None
+
 
     phone = str(
         phone
     ).strip()
 
+
     cleaned = ""
+
 
     for char in phone:
 
@@ -967,6 +1078,7 @@ def normalize_phone(
         ):
 
             cleaned += char
+
 
     if cleaned.startswith("+"):
 
@@ -985,6 +1097,7 @@ def normalize_phone(
             + cleaned[1:]
         )
 
+
     return cleaned
 
 
@@ -997,6 +1110,7 @@ def close_whatsapp_popups(
 ):
 
     closed_any = False
+
 
     close_selectors = [
 
@@ -1030,10 +1144,14 @@ def close_whatsapp_popups(
                 selector
             )
 
+
             count = locator.count()
 
+
             if count == 0:
+
                 continue
+
 
             for i in range(
                 min(count, 5)
@@ -1045,6 +1163,7 @@ def close_whatsapp_popups(
                         i
                     )
 
+
                     if element.is_visible(
                         timeout=500
                     ):
@@ -1053,19 +1172,24 @@ def close_whatsapp_popups(
                             timeout=1000
                         )
 
+
                         logger.info(
                             "WhatsApp-Popup geschlossen: %s",
                             selector,
                         )
 
+
                         closed_any = True
+
 
                         time.sleep(
                             0.5
                         )
 
+
                 except Exception:
                     pass
+
 
         except Exception:
             pass
@@ -1095,7 +1219,9 @@ def close_whatsapp_popups(
                 f"xpath={selector}"
             )
 
+
             count = locator.count()
+
 
             for i in range(
                 min(count, 5)
@@ -1107,6 +1233,7 @@ def close_whatsapp_popups(
                         i
                     )
 
+
                     if element.is_visible(
                         timeout=500
                     ):
@@ -1115,14 +1242,18 @@ def close_whatsapp_popups(
                             timeout=1000
                         )
 
+
                         closed_any = True
+
 
                         time.sleep(
                             0.5
                         )
 
+
                 except Exception:
                     pass
+
 
         except Exception:
             pass
@@ -1144,7 +1275,9 @@ def close_whatsapp_popups(
                 selector
             )
 
+
             count = locator.count()
+
 
             for i in range(
                 min(count, 3)
@@ -1156,10 +1289,13 @@ def close_whatsapp_popups(
                         i
                     )
 
+
                     if not element.is_visible(
                         timeout=300
                     ):
+
                         continue
+
 
                     aria = (
                         element.get_attribute(
@@ -1168,6 +1304,7 @@ def close_whatsapp_popups(
                         or ""
                     )
 
+
                     title = (
                         element.get_attribute(
                             "title"
@@ -1175,11 +1312,13 @@ def close_whatsapp_popups(
                         or ""
                     )
 
+
                     combined = (
                         aria
                         + " "
                         + title
                     ).lower()
+
 
                     if any(
                         word in combined
@@ -1194,14 +1333,18 @@ def close_whatsapp_popups(
                             timeout=1000
                         )
 
+
                         closed_any = True
+
 
                         time.sleep(
                             0.5
                         )
 
+
                 except Exception:
                     pass
+
 
         except Exception:
             pass
@@ -1224,9 +1367,11 @@ def is_logged_in(
             page
         )
 
+
         try:
 
             current_url = page.url
+
 
             if (
                 "web.whatsapp.com"
@@ -1234,6 +1379,7 @@ def is_logged_in(
             ):
 
                 return False
+
 
         except Exception:
             pass
@@ -1270,7 +1416,9 @@ def is_logged_in(
                     selector
                 )
 
+
                 count = locator.count()
+
 
                 if count > 0:
 
@@ -1290,8 +1438,10 @@ def is_logged_in(
 
                                 break
 
+
                         except Exception:
                             pass
+
 
             except Exception:
                 pass
@@ -1326,7 +1476,9 @@ def is_logged_in(
                 timeout=1500
             )
 
+
             body_lower = body_text.lower()
+
 
             for text in login_texts:
 
@@ -1338,6 +1490,7 @@ def is_logged_in(
                     login_screen_detected = True
 
                     break
+
 
         except Exception:
             pass
@@ -1366,6 +1519,7 @@ def is_logged_in(
             e,
         )
 
+
         return False
 
 
@@ -1379,25 +1533,74 @@ def save_screenshot(
 
     global last_screenshot_time
 
+
     try:
 
+        screenshot_path = Path(
+            QR_SCREENSHOT
+        )
+
+
+        screenshot_path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+
         page.screenshot(
-            path=QR_SCREENSHOT,
+            path=str(
+                screenshot_path
+            ),
             full_page=False,
         )
+
+
+        if not screenshot_path.exists():
+
+            logger.error(
+                "Playwright meldete Screenshot-Erfolg, "
+                "aber Datei existiert nicht: %s",
+                screenshot_path,
+            )
+
+            return False
+
+
+        file_size = screenshot_path.stat().st_size
+
+
+        if file_size <= 0:
+
+            logger.error(
+                "Screenshot-Datei ist leer: %s",
+                screenshot_path,
+            )
+
+            return False
+
 
         last_screenshot_time = (
             time.time()
         )
 
+
+        logger.info(
+            "Screenshot gespeichert: %s (%s Bytes)",
+            screenshot_path,
+            file_size,
+        )
+
+
         return True
+
 
     except Exception as e:
 
-        logger.debug(
-            "Screenshot konnte nicht erstellt werden: %s",
+        logger.exception(
+            "Screenshot konnte NICHT erstellt werden: %s",
             e,
         )
+
 
         return False
 
@@ -1412,22 +1615,36 @@ def wait_for_login(
 
     global login_status
 
+
     logger.info(
         "Warte auf WhatsApp-Login..."
     )
 
+
     started = time.time()
+
 
     screenshot_number = 0
 
 
     while not shutdown_requested:
 
-        save_screenshot(
+        screenshot_success = save_screenshot(
             page
         )
 
+
         screenshot_number += 1
+
+
+        if (
+            screenshot_number == 1
+            and not screenshot_success
+        ):
+
+            logger.warning(
+                "ERSTER QR-SCREENSHOT FEHLGESCHLAGEN."
+            )
 
 
         try:
@@ -1450,9 +1667,11 @@ def wait_for_login(
                     "logged_in"
                 )
 
+
                 logger.info(
                     "WhatsApp-Login erkannt."
                 )
+
 
                 return True
 
@@ -1470,8 +1689,11 @@ def wait_for_login(
 
                 logger.info(
                     "WhatsApp wartet noch auf Anmeldung. "
-                    "Screenshot #%s verfügbar.",
+                    "Screenshot #%s | verfügbar=%s",
                     screenshot_number,
+                    os.path.exists(
+                        QR_SCREENSHOT
+                    ),
                 )
 
 
@@ -1493,6 +1715,7 @@ def wait_for_login(
                 - started
             )
 
+
             if (
                 elapsed
                 >= LOGIN_TIMEOUT_SECONDS
@@ -1502,6 +1725,7 @@ def wait_for_login(
                     "Login-Timeout nach %s Sekunden.",
                     LOGIN_TIMEOUT_SECONDS,
                 )
+
 
                 return False
 
@@ -1523,11 +1747,14 @@ def normalize_text(
 ):
 
     if text is None:
+
         return ""
+
 
     text = str(
         text
     )
+
 
     text = (
         text
@@ -1541,7 +1768,9 @@ def normalize_text(
         .strip()
     )
 
+
     lines = []
+
 
     for line in text.split(
         "\n"
@@ -1556,6 +1785,7 @@ def normalize_text(
 
     normalized_lines = []
 
+
     previous_empty = False
 
 
@@ -1564,17 +1794,22 @@ def normalize_text(
         if line == "":
 
             if previous_empty:
+
                 continue
 
+
             previous_empty = True
+
 
             normalized_lines.append(
                 ""
             )
 
+
         else:
 
             previous_empty = False
+
 
             normalized_lines.append(
                 line
@@ -1595,6 +1830,7 @@ def text_matches(
         expected
     )
 
+
     actual_norm = normalize_text(
         actual
     )
@@ -1611,6 +1847,7 @@ def text_matches(
     expected_flat = " ".join(
         expected_norm.split()
     )
+
 
     actual_flat = " ".join(
         actual_norm.split()
@@ -1632,6 +1869,7 @@ def read_message_text(
 ):
 
     if element is None:
+
         return ""
 
 
@@ -1654,6 +1892,7 @@ def read_message_text(
                 selector
             )
 
+
             count = locator.count()
 
 
@@ -1667,23 +1906,29 @@ def read_message_text(
                         i
                     )
 
+
                     if not item.is_visible(
                         timeout=300
                     ):
+
                         continue
+
 
                     selectable_elements.append(
                         item
                     )
 
+
                 except Exception:
                     pass
+
 
         except Exception:
             pass
 
 
     unique_elements = []
+
 
     seen_signatures = set()
 
@@ -1707,6 +1952,7 @@ def read_message_text(
 
 
             if signature in seen_signatures:
+
                 continue
 
 
@@ -1714,9 +1960,11 @@ def read_message_text(
                 signature
             )
 
+
             unique_elements.append(
                 item
             )
+
 
         except Exception:
 
@@ -1864,6 +2112,7 @@ def read_message_text(
 
 
             if not normalized:
+
                 continue
 
 
@@ -1922,18 +2171,22 @@ def read_message_text(
                 cleaned_parts
             )
 
+
             result = normalize_text(
                 result
             )
+
 
             logger.info(
                 "Nachrichtentext aus selectable-text DOM gelesen."
             )
 
+
             logger.info(
                 "Gelesene Textlänge: %s Zeichen.",
                 len(result),
             )
+
 
             return result
 
@@ -1963,10 +2216,12 @@ def read_message_text(
                 "Nachrichtentext über Container-Fallback gelesen."
             )
 
+
             logger.info(
                 "Gelesene Textlänge: %s Zeichen.",
                 len(fallback_text),
             )
+
 
             return fallback_text
 
@@ -1992,6 +2247,7 @@ def find_message_container_from_time_element(
 ):
 
     if time_element is None:
+
         return None
 
 
@@ -2008,6 +2264,7 @@ def find_message_container_from_time_element(
 
                 element = data_id_locator.first
 
+
                 if element.is_visible(
                     timeout=300
                 ):
@@ -2021,7 +2278,9 @@ def find_message_container_from_time_element(
 
 
                     if data_id:
+
                         return element
+
 
             except Exception:
                 pass
@@ -2036,6 +2295,7 @@ def find_message_container_from_time_element(
 
 
         if count == 0:
+
             return None
 
 
@@ -2056,6 +2316,7 @@ def find_message_container_from_time_element(
                 if not element.is_visible(
                     timeout=200
                 ):
+
                     continue
 
 
@@ -2098,6 +2359,7 @@ def find_message_container_from_time_element(
                         or ""
                     ).lower()
 
+
                 except Exception:
                     pass
 
@@ -2116,7 +2378,9 @@ def find_message_container_from_time_element(
 
 
                     if own_pre:
+
                         has_pre_plain = True
+
 
                 except Exception:
                     pass
@@ -2138,6 +2402,7 @@ def find_message_container_from_time_element(
 
                             has_pre_plain = True
 
+
                     except Exception:
                         pass
 
@@ -2154,9 +2419,11 @@ def find_message_container_from_time_element(
                         or ""
                     )
 
+
                     text_length = len(
                         element_text
                     )
+
 
                 except Exception:
                     pass
@@ -2166,48 +2433,60 @@ def find_message_container_from_time_element(
 
 
                 if data_id:
+
                     score += 100
 
 
                 if role.lower() == "row":
+
                     score += 40
 
 
                 if "message" in class_lower:
+
                     score += 30
 
 
                 if "bubble" in class_lower:
+
                     score += 25
 
 
                 if "copyable-text" in class_lower:
+
                     score += 20
 
 
                 if "focusable-list-item" in class_lower:
+
                     score += 20
 
 
                 if "selectable-text" in class_lower:
+
                     score += 10
 
 
                 if has_pre_plain:
+
                     score += 20
 
 
                 if text_length > 0:
+
                     score += 5
 
 
                 if text_length > 10000:
+
                     score -= 80
 
                 elif text_length > 5000:
+
                     score -= 40
 
                 elif text_length > 2000:
+
                     score -= 20
 
 
@@ -2250,6 +2529,7 @@ def find_message_container_from_time_element(
 
 
         if not candidates:
+
             return None
 
 
@@ -2283,6 +2563,7 @@ def find_message_container_from_time_element(
             e,
         )
 
+
         return None
 
 
@@ -2298,6 +2579,7 @@ def get_message_time_values(
 
 
     if element is None:
+
         return values
 
 
@@ -2329,6 +2611,7 @@ def get_message_time_values(
                     value
                 )
 
+
         except Exception:
             pass
 
@@ -2350,6 +2633,7 @@ def get_message_time_values(
             locator = element.locator(
                 selector
             )
+
 
             count = locator.count()
 
@@ -2403,6 +2687,7 @@ def get_message_time_values(
                 except Exception:
                     pass
 
+
         except Exception:
             pass
 
@@ -2424,6 +2709,7 @@ def get_message_time_info(
 
 
     if not values:
+
         return ""
 
 
@@ -2448,6 +2734,7 @@ def parse_message_timestamp(
 
 
     if not values:
+
         return None
 
 
@@ -2835,6 +3122,7 @@ def parse_message_timestamp(
 
 
         if not result:
+
             return None
 
 
@@ -2850,6 +3138,7 @@ def parse_message_timestamp(
 
 
         if not timestamp:
+
             return None
 
 
@@ -2869,6 +3158,7 @@ def parse_message_timestamp(
             "Nachrichtenzeit konnte nicht geparst werden: %s",
             e,
         )
+
 
         return None
 
@@ -2947,10 +3237,12 @@ def get_all_time_candidates(
             selector
         )
 
+
         count = locator.count()
 
 
         if count == 0:
+
             return []
 
 
@@ -2975,6 +3267,7 @@ def get_all_time_candidates(
                 if not element.is_visible(
                     timeout=200
                 ):
+
                     continue
 
 
@@ -2987,6 +3280,7 @@ def get_all_time_candidates(
 
 
                 if not pre_plain:
+
                     continue
 
 
@@ -3308,6 +3602,7 @@ def find_new_time_message(
 
 
     if not new_candidates:
+
         return None
 
 
@@ -3483,21 +3778,26 @@ def verify_sent_message(
         "=================================================="
     )
 
+
     logger.info(
         "STARTE STRIKTE VERSANDPRÜFUNG"
     )
+
 
     logger.info(
         "PHASE 1 -> neue Nachricht über Zeitanker finden"
     )
 
+
     logger.info(
         "PHASE 2 -> Zeit dieser Nachricht prüfen"
     )
 
+
     logger.info(
         "PHASE 3 -> Text dieser Nachricht prüfen"
     )
+
 
     logger.info(
         "=================================================="
@@ -3515,6 +3815,12 @@ def verify_sent_message(
             page,
             send_time_ms,
         )
+    )
+
+
+    logger.info(
+        "Sendezeit Browser: %s",
+        send_time_readable,
     )
 
 
@@ -3751,8 +4057,7 @@ def verify_sent_message(
 
 
             logger.info(
-                "PHASE 2 ERFOLGREICH: "
-                "Nachrichtenzeit passt."
+                "PHASE 2 ERFOLGREICH: Nachrichtenzeit passt."
             )
 
 
@@ -3941,6 +4246,7 @@ def open_chat(
                     selector
                 )
 
+
                 count = locator.count()
 
 
@@ -3961,8 +4267,10 @@ def open_chat(
 
                             return element
 
+
                     except Exception:
                         pass
+
 
             except Exception:
                 pass
@@ -3992,6 +4300,7 @@ def process_contact(
 ):
 
     global current_contact_index
+
 
     current_contact_index = (
         index + 1
@@ -4029,6 +4338,7 @@ def process_contact(
             "chat_oeffnen",
         )
 
+
         return False
 
 
@@ -4051,6 +4361,7 @@ def process_contact(
             "Kontakt bereits bestätigt. Überspringe."
         )
 
+
         return True
 
 
@@ -4072,6 +4383,7 @@ def process_contact(
                 "_send_status"
             ),
         )
+
 
         return False
 
@@ -4128,6 +4440,7 @@ def process_contact(
 
         compose.click()
 
+
         compose.fill(
             str(nachricht)
         )
@@ -4169,6 +4482,7 @@ def process_contact(
             actual_input = compose.input_value(
                 timeout=2000
             )
+
 
         except Exception:
 
@@ -4444,6 +4758,7 @@ def process_order(
 ):
 
     global current_order_id
+    global current_contact_index
 
 
     current_order_id = (
@@ -4488,6 +4803,8 @@ def process_order(
 
 
         current_order_id = None
+        current_contact_index = None
+
 
         return False
 
@@ -4497,7 +4814,13 @@ def process_order(
     ):
 
         if shutdown_requested:
+
             break
+
+
+        current_contact_index = (
+            index + 1
+        )
 
 
         kontakt = kontakte[index]
@@ -4525,6 +4848,7 @@ def process_order(
                 index + 1,
                 status,
             )
+
 
             continue
 
@@ -4583,12 +4907,14 @@ def process_order(
                 index + 1,
             )
 
+
         else:
 
             logger.warning(
                 "Kontakt %s wurde NICHT bestätigt.",
                 index + 1,
             )
+
 
             logger.warning(
                 "KEIN RESEND."
@@ -4651,8 +4977,8 @@ def process_order(
 
 
         current_order_id = None
-
         current_contact_index = None
+
 
         return True
 
@@ -4670,8 +4996,8 @@ def process_order(
 
 
         current_order_id = None
-
         current_contact_index = None
+
 
         return False
 
@@ -4690,8 +5016,8 @@ def process_order(
 
 
     current_order_id = None
-
     current_contact_index = None
+
 
     return False
 
@@ -4734,10 +5060,12 @@ def cleanup_browser_locks():
 
                 lock_path.unlink()
 
+
                 logger.warning(
                     "Alte Chromium-Lockdatei entfernt: %s",
                     lock_path,
                 )
+
 
                 removed = True
 
@@ -4910,6 +5238,11 @@ def start_browser(
             )
 
 
+            logger.info(
+                "Chromium nach Lock-Cleanup erfolgreich gestartet."
+            )
+
+
             return context
 
 
@@ -4926,7 +5259,9 @@ def close_browser_context(
 
     global browser_page
 
+
     if not context:
+
         return
 
 
@@ -4934,9 +5269,11 @@ def close_browser_context(
 
         context.close()
 
+
         logger.info(
             "Browser-Kontext geschlossen."
         )
+
 
     except Exception as e:
 
@@ -4944,6 +5281,7 @@ def close_browser_context(
             "Browser konnte nicht sauber geschlossen werden: %s",
             e,
         )
+
 
     finally:
 
@@ -4981,6 +5319,7 @@ def prepare_whatsapp_session(
     if not logged_in:
 
         login_status = "error"
+
 
         raise RuntimeError(
             "WhatsApp konnte nicht angemeldet werden."
@@ -5046,9 +5385,11 @@ def run_worker_cycle(
 ):
 
     global browser_restart_requested
+    global login_status
 
 
     if shutdown_requested:
+
         return conn, context, page
 
 
@@ -5206,6 +5547,7 @@ def run_worker_cycle(
             WORKER_IDLE_SECONDS
         )
 
+
         return conn, context, page
 
 
@@ -5231,11 +5573,6 @@ def run_worker_cycle(
         )
 
 
-        # ----------------------------------------------------
-        # Bei einem Browserfehler nicht blind weitermachen.
-        # Docker bzw. unser Recovery startet den Browser neu.
-        # ----------------------------------------------------
-
         browser_error_words = [
 
             "target closed",
@@ -5249,7 +5586,6 @@ def run_worker_cycle(
             "connection closed",
 
             "playwright",
-
         ]
 
 
@@ -5286,9 +5622,11 @@ def run_worker_cycle(
                     fehler=1,
                 )
 
+
             except Exception:
 
                 try:
+
                     conn.rollback()
 
                 except Exception:
@@ -5319,9 +5657,17 @@ def worker_main():
         "=================================================="
     )
 
+
     logger.info(
         "WhatsApp Worker startet"
     )
+
+
+    logger.info(
+        "AKTUELLE WORKER VERSION: %s",
+        VERSION,
+    )
+
 
     logger.info(
         "=================================================="
@@ -5379,6 +5725,12 @@ def worker_main():
     )
 
 
+    logger.info(
+        "QR-Screenshot: %s",
+        QR_SCREENSHOT,
+    )
+
+
     if (
         not DRY_RUN
         and ALLOW_REAL_SEND
@@ -5388,17 +5740,21 @@ def worker_main():
             "=================================================="
         )
 
+
         logger.warning(
             "ECHTER VERSAND IST AKTIV."
         )
+
 
         logger.warning(
             "DRY_RUN=false"
         )
 
+
         logger.warning(
             "ALLOW_REAL_SEND=true"
         )
+
 
         logger.warning(
             "=================================================="
@@ -5516,12 +5872,6 @@ def worker_main():
                         )
 
 
-                        # ------------------------------------
-                        # Bei unbekanntem kritischem Fehler:
-                        # kurz warten und nächsten Zyklus
-                        # versuchen.
-                        # ------------------------------------
-
                         time.sleep(
                             BROWSER_RESTART_DELAY_SECONDS
                         )
@@ -5545,18 +5895,12 @@ def worker_main():
 
         login_status = "error"
 
+
         logger.exception(
             "Kritischer Worker-Fehler: %s",
             e,
         )
 
-
-        # ----------------------------------------------------
-        # Exit-Code 1:
-        #
-        # Docker / blitz.cloud kann den Container anschließend
-        # automatisch neu starten.
-        # ----------------------------------------------------
 
         raise
 
@@ -5574,9 +5918,11 @@ def worker_main():
 
                 conn.close()
 
+
                 logger.info(
                     "Datenbankverbindung geschlossen."
                 )
+
 
             except Exception:
                 pass
@@ -5602,15 +5948,19 @@ if __name__ == "__main__":
 
         worker_main()
 
+
     except KeyboardInterrupt:
 
         shutdown_requested = True
+
 
         logger.info(
             "Worker durch Benutzer beendet."
         )
 
+
         sys.exit(0)
+
 
     except Exception:
 
@@ -5618,4 +5968,6 @@ if __name__ == "__main__":
             "Worker wurde aufgrund eines kritischen Fehlers beendet."
         )
 
+
         sys.exit(1)
+
