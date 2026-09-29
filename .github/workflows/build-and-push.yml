@@ -30,4 +30,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/raeucherosO/whatsapp-worker:latest
+          tags: ghcr.io/raeucheroso/whatsapp-worker
