@@ -5532,11 +5532,7 @@ def worker_main():
     global shutdown_requested
 
 
-    logger.info(
-        
-    )
-
-
+    
     logger.info(
         "WhatsApp Worker startet"
     )
