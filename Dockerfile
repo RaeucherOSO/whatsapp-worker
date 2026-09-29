@@ -1,21 +1,26 @@
 FROM mcr.microsoft.com/playwright/python:v1.63.0-jammy
 
-ENV PLAYWRIGHT_BROWSERS_PATH=0
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+ENV PLAYWRIGHT_BROWSERS_PATH=0 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PORT=8080
 
 WORKDIR /app
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+    && python -c "import playwright; print('PLAYWRIGHT OK:', playwright.__version__)"
 
 COPY worker.py .
 
-RUN mkdir -p /app/whatsapp_browser
+RUN mkdir -p /app/whatsapp_browser \
+    && chown -R 1000:1000 /app
 
 VOLUME ["/app/whatsapp_browser"]
 
 EXPOSE 8080
+
+USER pwuser
 
 CMD ["xvfb-run", "-a", "python", "worker.py"]
