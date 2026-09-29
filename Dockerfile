@@ -9,8 +9,8 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt \
-    && python -c "import playwright; print('PLAYWRIGHT OK')"
+RUN python3 -m pip install --no-cache-dir -r requirements.txt \
+    && python3 -c "import playwright; print('PLAYWRIGHT OK')"
 
 COPY worker.py .
 
