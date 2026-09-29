@@ -259,7 +259,7 @@ signal.signal(
 # FLASK WEBSEITE
 # ============================================================
 
-HTML_PAGE = f"""
+HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -359,7 +359,7 @@ HTML_PAGE = f"""
     <div>
         <img
     id="qr"
-    src="/qr?token={QR_ACCESS_TOKEN}"
+    src="/qr?token=__QR_ACCESS_TOKEN__"
     alt="WhatsApp Screenshot"
 >
     </div>
@@ -373,7 +373,7 @@ HTML_PAGE = f"""
 
         async function updateStatus() {
 
-            try {
+            try :
 
                 const response =
                     await fetch("/status");
@@ -428,7 +428,7 @@ function updateScreenshot() {
         document.getElementById("qr");
 
     image.src =
-        "/qr?token={QR_ACCESS_TOKEN}&t="
+        "/qr?token=__QR_ACCESS_TOKEN__&t="
         + new Date().getTime();
 }
 
@@ -454,6 +454,10 @@ function updateScreenshot() {
 </html>
 """
 
+HTML_PAGE = HTML_PAGE.replace(
+    "__QR_ACCESS_TOKEN__",
+    QR_ACCESS_TOKEN,
+)
 
 @app.route("/")
 def index():
