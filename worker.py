@@ -1,4 +1,4 @@
-import os
+﻿import os
 import json
 import time
 import threading
@@ -196,7 +196,7 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# GLOBALE ZUSTÄNDE
+# GLOBALE ZUSTÃ„NDE
 # ============================================================
 
 app = Flask(__name__)
@@ -373,7 +373,7 @@ HTML_PAGE = """
     </div>
 
     <p class="small">
-        Der Worker läuft im Hintergrund.
+        Der Worker lÃ¤uft im Hintergrund.
         Status und Screenshot werden automatisch aktualisiert.
     </p>
 
@@ -406,7 +406,7 @@ HTML_PAGE = """
                 ).textContent =
                     data.browser_available
                     ? "bereit"
-                    : "nicht verfügbar";
+                    : "nicht verfÃ¼gbar";
 
                 document.getElementById(
                     "order"
@@ -494,7 +494,7 @@ def qr():
         ) != token:
 
             logger.warning(
-                "Ungültiger QR-Zugriff."
+                "UngÃ¼ltiger QR-Zugriff."
             )
 
             return Response(
@@ -542,7 +542,7 @@ def qr():
 
     return Response(
         (
-            "Noch kein Screenshot verfügbar. "
+            "Noch kein Screenshot verfÃ¼gbar. "
             f"Pfad={QR_SCREENSHOT}"
         ),
         status=404,
@@ -667,7 +667,7 @@ def start_webserver():
     )
 
     logger.info(
-        "QR-Webseite erreichbar über /"
+        "QR-Webseite erreichbar Ã¼ber /"
     )
 
     app.run(
@@ -915,7 +915,7 @@ def update_order(
 
 
 # ============================================================
-# NÄCHSTEN AUFTRAG HOLEN
+# NÃ„CHSTEN AUFTRAG HOLEN
 # ============================================================
 
 def get_next_order(
@@ -1114,23 +1114,23 @@ def close_whatsapp_popups(
 
     close_selectors = [
 
-        'button[aria-label="Schließen"]',
+        'button[aria-label="SchlieÃŸen"]',
 
         'button[aria-label="Close"]',
 
         'button[aria-label="Dismiss"]',
 
-        '[role="button"][aria-label="Schließen"]',
+        '[role="button"][aria-label="SchlieÃŸen"]',
 
         '[role="button"][aria-label="Close"]',
 
         '[role="button"][aria-label="Dismiss"]',
 
-        'button[title="Schließen"]',
+        'button[title="SchlieÃŸen"]',
 
         'button[title="Close"]',
 
-        '[role="button"][title="Schließen"]',
+        '[role="button"][title="SchlieÃŸen"]',
 
         '[role="button"][title="Close"]',
     ]
@@ -1198,13 +1198,13 @@ def close_whatsapp_popups(
     xpath_selectors = [
 
         '//*[self::button or @role="button"]'
-        '[normalize-space(@aria-label)="Schließen"]',
+        '[normalize-space(@aria-label)="SchlieÃŸen"]',
 
         '//*[self::button or @role="button"]'
         '[normalize-space(@aria-label)="Close"]',
 
         '//*[self::button or @role="button"]'
-        '[normalize-space(@title)="Schließen"]',
+        '[normalize-space(@title)="SchlieÃŸen"]',
 
         '//*[self::button or @role="button"]'
         '[normalize-space(@title)="Close"]',
@@ -1323,7 +1323,7 @@ def close_whatsapp_popups(
                     if any(
                         word in combined
                         for word in [
-                            "schließen",
+                            "schlieÃŸen",
                             "close",
                             "dismiss",
                         ]
@@ -1462,7 +1462,7 @@ def is_logged_in(
 
             "phone number",
 
-            "Telefonnummer verknüpfen",
+            "Telefonnummer verknÃ¼pfen",
 
             "Link with phone number",
         ]
@@ -2011,7 +2011,7 @@ def read_message_text(
 
 
             logger.info(
-                "Gelesene Textlänge: %s Zeichen.",
+                "Gelesene TextlÃ¤nge: %s Zeichen.",
                 len(result),
             )
 
@@ -2041,12 +2041,12 @@ def read_message_text(
 
 
             logger.info(
-                "Nachrichtentext über Container-Fallback gelesen."
+                "Nachrichtentext Ã¼ber Container-Fallback gelesen."
             )
 
 
             logger.info(
-                "Gelesene Textlänge: %s Zeichen.",
+                "Gelesene TextlÃ¤nge: %s Zeichen.",
                 len(fallback_text),
             )
 
@@ -3447,7 +3447,7 @@ def find_new_time_message(
 
 
 # ============================================================
-# KONTAKT UNGEKLÄRT
+# KONTAKT UNGEKLÃ„RT
 # ============================================================
 
 def set_contact_unclear(
@@ -3465,7 +3465,7 @@ def set_contact_unclear(
 
     kontakt[
         "_send_status"
-    ] = "ungeklärt"
+    ] = "ungeklÃ¤rt"
 
 
     kontakt[
@@ -3509,7 +3509,7 @@ def set_contact_unclear(
 
 
     logger.error(
-        "Kontakt %s wurde auf 'ungeklärt' gesetzt.",
+        "Kontakt %s wurde auf 'ungeklÃ¤rt' gesetzt.",
         index + 1,
     )
 
@@ -3536,7 +3536,7 @@ def set_contact_unclear(
 
 
 # ============================================================
-# KONTAKT BESTÄTIGT
+# KONTAKT BESTÃ„TIGT
 # ============================================================
 
 def set_contact_confirmed(
@@ -3551,12 +3551,12 @@ def set_contact_confirmed(
 
     kontakt[
         "_send_status"
-    ] = "bestätigt"
+    ] = "bestÃ¤tigt"
 
 
     kontakt[
         "_send_phase"
-    ] = "bestätigt"
+    ] = "bestÃ¤tigt"
 
 
     kontakt.pop(
@@ -3592,7 +3592,7 @@ def set_contact_confirmed(
 
 
 # ============================================================
-# VERSANDPRÜFUNG
+# VERSANDPRÃœFUNG
 # ============================================================
 
 def verify_sent_message(
@@ -3608,22 +3608,22 @@ def verify_sent_message(
 
 
     logger.info(
-        "STARTE STRIKTE VERSANDPRÜFUNG"
+        "STARTE STRIKTE VERSANDPRÃœFUNG"
     )
 
 
     logger.info(
-        "PHASE 1 -> neue Nachricht über Zeitanker finden"
+        "PHASE 1 -> neue Nachricht Ã¼ber Zeitanker finden"
     )
 
 
     logger.info(
-        "PHASE 2 -> Zeit dieser Nachricht prüfen"
+        "PHASE 2 -> Zeit dieser Nachricht prÃ¼fen"
     )
 
 
     logger.info(
-        "PHASE 3 -> Text dieser Nachricht prüfen"
+        "PHASE 3 -> Text dieser Nachricht prÃ¼fen"
     )
 
 
@@ -3776,7 +3776,7 @@ def verify_sent_message(
 
                     "ZEIT_CONTAINER_NICHT_GEFUNDEN",
 
-                    "Neuer Nachrichten-Zeitanker gefunden, aber der zugehörige Nachrichten-Container konnte nicht bestimmt werden.",
+                    "Neuer Nachrichten-Zeitanker gefunden, aber der zugehÃ¶rige Nachrichten-Container konnte nicht bestimmt werden.",
 
                     "verifikation_neue_nachricht",
                 )
@@ -3944,7 +3944,7 @@ def verify_sent_message(
 
 
                 logger.info(
-                    "VERSAND VOLLSTÄNDIG BESTÄTIGT."
+                    "VERSAND VOLLSTÃ„NDIG BESTÃ„TIGT."
                 )
 
 
@@ -3956,7 +3956,7 @@ def verify_sent_message(
 
                     "Neue Nachricht gefunden, Zeit passt und der Text der exakt gefundenen Nachricht stimmt.",
 
-                    "bestätigt",
+                    "bestÃ¤tigt",
                 )
 
 
@@ -3975,7 +3975,7 @@ def verify_sent_message(
         except Exception as e:
 
             logger.exception(
-                "Fehler während der Versandprüfung: %s",
+                "Fehler wÃ¤hrend der VersandprÃ¼fung: %s",
                 e,
             )
 
@@ -3986,7 +3986,7 @@ def verify_sent_message(
 
                 "VERIFIKATION_AUSNAHME",
 
-                f"Unerwarteter Fehler während der Versandprüfung: {e}",
+                f"Unerwarteter Fehler wÃ¤hrend der VersandprÃ¼fung: {e}",
 
                 "verifikation_neue_nachricht",
             )
@@ -4003,14 +4003,14 @@ def verify_sent_message(
 
         "KEINE_NEUE_NACHRICHT_GEFUNDEN",
 
-        f"Innerhalb von {VERIFY_TIMEOUT_SECONDS} Sekunden wurde keine neue Nachricht über einen neuen Zeitanker gefunden.",
+        f"Innerhalb von {VERIFY_TIMEOUT_SECONDS} Sekunden wurde keine neue Nachricht Ã¼ber einen neuen Zeitanker gefunden.",
 
         "verifikation_neue_nachricht",
     )
 
 
 # ============================================================
-# CHAT ÖFFNEN
+# CHAT Ã–FFNEN
 # ============================================================
 
 def open_chat(
@@ -4024,7 +4024,7 @@ def open_chat(
     )
 
     logger.info(
-        "Öffne WhatsApp-Chat: %s",
+        "Ã–ffne WhatsApp-Chat: %s",
         phone,
     )
 
@@ -4142,7 +4142,7 @@ def process_contact(
             kontakte,
             index,
             "TELEFONNUMMER_UNGUELTIG",
-            "Kontakt enthält keine gültige Telefonnummer.",
+            "Kontakt enthÃ¤lt keine gÃ¼ltige Telefonnummer.",
             "chat_oeffnen",
         )
 
@@ -4162,11 +4162,11 @@ def process_contact(
         kontakt.get(
             "_send_status"
         )
-        == "bestätigt"
+        == "bestÃ¤tigt"
     ):
 
         logger.info(
-            "Kontakt bereits bestätigt. Überspringe."
+            "Kontakt bereits bestÃ¤tigt. Ãœberspringe."
         )
 
 
@@ -4179,7 +4179,7 @@ def process_contact(
         )
         in [
             "sending",
-            "ungeklärt",
+            "ungeklÃ¤rt",
             "fehler",
         ]
     ):
@@ -4216,7 +4216,7 @@ def process_contact(
     except Exception as e:
 
         logger.error(
-            "Chat konnte nicht geöffnet werden: %s",
+            "Chat konnte nicht geÃ¶ffnet werden: %s",
             e,
         )
 
@@ -4227,7 +4227,7 @@ def process_contact(
             kontakte,
             index,
             "CHAT_KONNTE_NICHT_GEOEFFNET_WERDEN",
-            f"WhatsApp-Chat konnte nicht geöffnet werden: {e}",
+            f"WhatsApp-Chat konnte nicht geÃ¶ffnet werden: {e}",
             "chat_oeffnen",
         )
 
@@ -4257,7 +4257,7 @@ def process_contact(
     except Exception as e:
 
         logger.error(
-            "Nachricht konnte nicht eingefügt werden: %s",
+            "Nachricht konnte nicht eingefÃ¼gt werden: %s",
             e,
         )
 
@@ -4268,7 +4268,7 @@ def process_contact(
             kontakte,
             index,
             "NACHRICHT_KONNTE_NICHT_EINGEFUEGT_WERDEN",
-            f"Nachricht konnte nicht in das WhatsApp-Eingabefeld eingefügt werden: {e}",
+            f"Nachricht konnte nicht in das WhatsApp-Eingabefeld eingefÃ¼gt werden: {e}",
             "eingabe",
         )
 
@@ -4303,7 +4303,7 @@ def process_contact(
     ):
 
         logger.error(
-            "Eingabeprüfung fehlgeschlagen."
+            "EingabeprÃ¼fung fehlgeschlagen."
         )
 
 
@@ -4460,7 +4460,7 @@ def process_contact(
 
 
         logger.info(
-            "Enter wurde einmal gedrückt."
+            "Enter wurde einmal gedrÃ¼ckt."
         )
 
 
@@ -4481,7 +4481,7 @@ def process_contact(
 
 
     logger.info(
-        "Nachricht wurde einmal ausgelöst."
+        "Nachricht wurde einmal ausgelÃ¶st."
     )
 
 
@@ -4510,7 +4510,7 @@ def process_contact(
     if verified:
 
         logger.info(
-            "Nachricht vollständig bestätigt."
+            "Nachricht vollstÃ¤ndig bestÃ¤tigt."
         )
 
 
@@ -4526,7 +4526,7 @@ def process_contact(
 
 
     logger.error(
-        "Nachricht konnte nicht vollständig bestätigt werden."
+        "Nachricht konnte nicht vollstÃ¤ndig bestÃ¤tigt werden."
     )
 
 
@@ -4596,7 +4596,7 @@ def process_order(
     if not kontakte:
 
         logger.warning(
-            "Auftrag enthält keine Kontakte."
+            "Auftrag enthÃ¤lt keine Kontakte."
         )
 
 
@@ -4639,13 +4639,13 @@ def process_order(
         )
 
 
-        if status == "bestätigt":
+        if status == "bestÃ¤tigt":
 
             continue
 
 
         if status in [
-            "ungeklärt",
+            "ungeklÃ¤rt",
             "fehler",
             "sending",
         ]:
@@ -4700,7 +4700,7 @@ def process_order(
             except Exception as inner_error:
 
                 logger.exception(
-                    "Fehler beim Speichern des ungeklärten Kontakts: %s",
+                    "Fehler beim Speichern des ungeklÃ¤rten Kontakts: %s",
                     inner_error,
                 )
 
@@ -4719,7 +4719,7 @@ def process_order(
         else:
 
             logger.warning(
-                "Kontakt %s wurde NICHT bestätigt.",
+                "Kontakt %s wurde NICHT bestÃ¤tigt.",
                 index + 1,
             )
 
@@ -4748,13 +4748,13 @@ def process_order(
         )
 
 
-        if status == "bestätigt":
+        if status == "bestÃ¤tigt":
 
             confirmed_count += 1
 
 
         elif status in [
-            "ungeklärt",
+            "ungeklÃ¤rt",
             "fehler",
             "sending",
         ]:
@@ -4922,11 +4922,6 @@ def start_browser(
         "Browser-Profil: %s",
         browser_path.absolute(),
     )
-
-
-    cleanup_browser_locks()
-
-
     launch_args = [
 
         "--disable-dev-shm-usage",
@@ -5004,9 +4999,6 @@ def start_browser(
             logger.warning(
                 "Chromium-Profil war gesperrt."
             )
-
-            cleanup_browser_locks()
-
             lock_retry_count = 0
             max_lock_retries = 12
 
@@ -5175,14 +5167,14 @@ def wait_for_login(
             if screenshot_number % 10 == 0:
                 logger.info(
                     "WhatsApp wartet noch auf Anmeldung. "
-                    "Screenshot #%s | verfügbar=%s",
+                    "Screenshot #%s | verfÃ¼gbar=%s",
                     screenshot_number,
                     os.path.exists(QR_SCREENSHOT),
                 )
 
         except Exception as e:
             logger.debug(
-                "Loginprüfung Fehler: %s",
+                "LoginprÃ¼fung Fehler: %s",
                 e,
             )
 
@@ -5307,7 +5299,7 @@ def run_worker_cycle(
 
 
     # --------------------------------------------------------
-    # DB-Verbindung prüfen
+    # DB-Verbindung prÃ¼fen
     # --------------------------------------------------------
 
     conn = ensure_db_connection(
@@ -5318,12 +5310,12 @@ def run_worker_cycle(
     if conn is None:
 
         raise RuntimeError(
-            "Keine Datenbankverbindung verfügbar."
+            "Keine Datenbankverbindung verfÃ¼gbar."
         )
 
 
     # --------------------------------------------------------
-    # Browser prüfen
+    # Browser prÃ¼fen
     # --------------------------------------------------------
 
     try:
@@ -5338,7 +5330,7 @@ def run_worker_cycle(
     except Exception as e:
 
         logger.warning(
-            "Browser-Seite nicht mehr verfügbar: %s",
+            "Browser-Seite nicht mehr verfÃ¼gbar: %s",
             e,
         )
 
@@ -5389,7 +5381,7 @@ def run_worker_cycle(
 
 
     # --------------------------------------------------------
-    # Login-Zustand prüfen
+    # Login-Zustand prÃ¼fen
     # --------------------------------------------------------
 
     try:
@@ -5416,7 +5408,7 @@ def run_worker_cycle(
     except Exception as e:
 
         logger.warning(
-            "WhatsApp-Session konnte nicht geprüft werden: %s",
+            "WhatsApp-Session konnte nicht geprÃ¼ft werden: %s",
             e,
         )
 
@@ -5441,7 +5433,7 @@ def run_worker_cycle(
     except Exception as e:
 
         logger.error(
-            "Fehler beim Lesen der Aufträge: %s",
+            "Fehler beim Lesen der AuftrÃ¤ge: %s",
             e,
         )
 
@@ -5879,4 +5871,5 @@ if __name__ == "__main__":
 
 
         sys.exit(1)
+
 
