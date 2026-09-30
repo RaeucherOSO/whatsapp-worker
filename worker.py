@@ -4951,7 +4951,6 @@ def start_browser(
 
                 no_viewport=True,
 
-                user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.6723.31 Safari/537.36",
 
                 args=launch_args,
             )
@@ -5025,7 +5024,6 @@ def start_browser(
                             ),
                             headless=HEADLESS,
                             no_viewport=True,
-                            user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.6723.31 Safari/537.36",
                             args=launch_args,
                         )
                     )
