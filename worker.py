@@ -5005,29 +5005,63 @@ def start_browser(
                 "Chromium-Profil war gesperrt."
             )
 
-
             cleanup_browser_locks()
 
+            lock_retry_count = 0
+            max_lock_retries = 12
 
-            time.sleep(
-                1
-            )
+            while lock_retry_count < max_lock_retries:
+                lock_retry_count += 1
 
-
-            context = (
-                playwright.chromium
-                .launch_persistent_context(
-                    user_data_dir=str(
-                        browser_path.absolute()
-                    ),
-
-                    headless=HEADLESS,
-
-                    no_viewport=True,
-
-                    args=launch_args,
+                logger.warning(
+                    "Warte auf Freigabe des Chromium-Profils. "
+                    "Versuch %s/%s.",
+                    lock_retry_count,
+                    max_lock_retries,
                 )
-            )
+
+                time.sleep(5)
+
+                try:
+                    context = (
+                        playwright.chromium
+                        .launch_persistent_context(
+                            user_data_dir=str(
+                                browser_path.absolute()
+                            ),
+                            headless=HEADLESS,
+                            no_viewport=True,
+                            args=launch_args,
+                        )
+                    )
+
+                    logger.info(
+                        "Chromium-Profil wurde erfolgreich freigegeben."
+                    )
+
+                    break
+
+                except Exception as retry_error:
+                    retry_text = str(retry_error)
+
+                    if (
+                        "SingletonLock" not in retry_text
+                        and "SingletonCookie" not in retry_text
+                        and "SingletonSocket" not in retry_text
+                        and "profile appears to be in use"
+                        not in retry_text
+                    ):
+                        raise
+
+                    logger.warning(
+                        "Chromium-Profil weiterhin gesperrt."
+                    )
+
+            else:
+                raise RuntimeError(
+                    "Chromium-Profil blieb trotz mehrerer Versuche "
+                    "gesperrt."
+                )
 
 
             if context.pages:
