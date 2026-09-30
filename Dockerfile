@@ -31,4 +31,4 @@ EXPOSE 8080
 
 USER pwuser
 
-CMD ["xvfb-run", "-a", "python3", "worker.py"]
+CMD ["bash", "-lc", "Xvfb :99 -screen 0 1280x720x24 -nolisten tcp >/tmp/xvfb.log 2>&1 & export DISPLAY=:99; exec python3 worker.py"]

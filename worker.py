@@ -115,7 +115,7 @@ KEEP_BROWSER_OPEN = (
 )
 
 
-HEADLESS = True
+HEADLESS = False
 
 QR_WEB_PORT = int(
     os.getenv(
