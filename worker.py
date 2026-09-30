@@ -118,7 +118,7 @@ KEEP_BROWSER_OPEN = (
 HEADLESS = (
     os.getenv(
         "HEADLESS",
-        "true",
+        "false",
     ).lower()
     == "true"
 )
