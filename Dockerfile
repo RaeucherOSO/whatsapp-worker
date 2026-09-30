@@ -31,4 +31,5 @@ EXPOSE 8080
 
 USER pwuser
 
-CMD ["xvfb-run", "-a", "python3", "worker.py"]
+ENTRYPOINT ["xvfb-run", "-a"]
+CMD ["python3", "worker.py"]
