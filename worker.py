@@ -5141,17 +5141,6 @@ def wait_for_login(
     screenshot_number = 0
 
     while not shutdown_requested:
-        screenshot_success = save_screenshot(page)
-        screenshot_number += 1
-
-        if (
-            screenshot_number == 1
-            and not screenshot_success
-        ):
-            logger.warning(
-                "ERSTER QR-SCREENSHOT FEHLGESCHLAGEN."
-            )
-
         try:
             close_whatsapp_popups(page)
         except Exception:
@@ -5166,6 +5155,17 @@ def wait_for_login(
                 return True
 
             login_status = "qr_ready"
+
+            screenshot_success = save_screenshot(page)
+            screenshot_number += 1
+
+            if (
+                screenshot_number == 1
+                and not screenshot_success
+            ):
+                logger.warning(
+                    "ERSTER QR-SCREENSHOT FEHLGESCHLAGEN."
+                )
 
             if screenshot_number % 10 == 0:
                 logger.info(
