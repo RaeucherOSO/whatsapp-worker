@@ -6,6 +6,8 @@ import logging
 import re
 import signal
 import sys
+import subprocess
+import shutil
 
 from pathlib import Path
 from datetime import datetime, timezone
@@ -5552,6 +5554,39 @@ def worker_main():
     global login_status
     global db_connected
     global shutdown_requested
+
+    # Xvfb für headed Chrome unter Linux starten.
+    # Unter Windows wird dieser Block nicht ausgeführt.
+    if os.name == "posix" and not os.getenv("DISPLAY"):
+        xvfb_path = shutil.which("Xvfb")
+
+        if xvfb_path:
+            subprocess.Popen(
+                [
+                    xvfb_path,
+                    ":99",
+                    "-screen",
+                    "0",
+                    "1280x720x24",
+                    "-nolisten",
+                    "tcp",
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+            time.sleep(1)
+            os.environ["DISPLAY"] = ":99"
+
+            logger.info(
+                "Xvfb gestartet: DISPLAY=%s",
+                os.environ["DISPLAY"],
+            )
+        else:
+            logger.warning(
+                "Xvfb wurde nicht gefunden. "
+                "Headed Chrome kann unter Linux nicht starten."
+            )
 
 
     
