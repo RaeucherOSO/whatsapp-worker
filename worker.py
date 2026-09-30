@@ -4943,6 +4943,7 @@ def start_browser(
         context = (
             playwright.chromium
             .launch_persistent_context(
+                executable_path="/opt/chrome-linux64/chrome",
                 user_data_dir=str(
                     browser_path.absolute()
                 ),
@@ -5019,6 +5020,7 @@ def start_browser(
                     context = (
                         playwright.chromium
                         .launch_persistent_context(
+			    executable_path="/opt/chrome-linux64/chrome",
                             user_data_dir=str(
                                 browser_path.absolute()
                             ),

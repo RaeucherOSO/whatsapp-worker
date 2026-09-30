@@ -11,6 +11,15 @@ COPY requirements.txt .
 
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
+# Google Chrome for Testing 154
+USER root
+RUN apt-get update -qq \
+    && apt-get install -y -qq wget unzip ca-certificates \
+    && wget -q https://storage.googleapis.com/chrome-for-testing-public/154.0.8037.92/linux64/chrome-linux64.zip -O /tmp/chrome.zip \
+    && unzip -q /tmp/chrome.zip -d /opt \
+    && rm /tmp/chrome.zip \
+    && /opt/chrome-linux64/chrome --version
+
 COPY worker.py .
 
 RUN mkdir -p /app/whatsapp_browser
