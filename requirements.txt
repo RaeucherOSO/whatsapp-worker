@@ -1,4 +1,4 @@
-Flask
+﻿Flask
 psycopg2-binary
 python-dotenv
-playwright
+playwright==1.48.0

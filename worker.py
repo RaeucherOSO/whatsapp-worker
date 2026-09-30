@@ -1540,7 +1540,7 @@ def save_screenshot(page):
 
         logger.info(
             "SCREENSHOT TEST: title=%s",
-            page.title(timeout=3000),
+            page.title(),
         )
 
         page.screenshot(
@@ -5871,5 +5871,4 @@ if __name__ == "__main__":
 
 
         sys.exit(1)
-
 
