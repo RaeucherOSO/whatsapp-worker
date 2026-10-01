@@ -1540,7 +1540,7 @@ def save_screenshot(page):
         page.screenshot(
             path=QR_SCREENSHOT,
             full_page=False,
-            timeout=5000,
+            timeout=30000,
         )
 
         last_screenshot_time = time.time()
