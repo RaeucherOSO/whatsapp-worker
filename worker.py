@@ -5156,6 +5156,13 @@ def prepare_whatsapp_session(
     )
 
     logger.info(
+        "WHATSAPP NACH GOTO URL: %s",
+        page.url,
+    )
+
+    save_screenshot(page)
+
+    logger.info(
         "WHATSAPP GOTO ENDE"
     )
 
