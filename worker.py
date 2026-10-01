@@ -8,6 +8,7 @@ import signal
 import sys
 import subprocess
 import shutil
+import signal
 
 from pathlib import Path
 from datetime import datetime, timezone
@@ -4996,6 +4997,36 @@ def start_browser(
             logger.warning(
                 "Chromium-Profil war gesperrt."
             )
+            profile_arg = (
+                f"--user-data-dir={browser_path.absolute()}"
+            )
+
+            logger.warning(
+                "Versuche, verwaiste Chromium-Prozesse f?r das "
+                "WhatsApp-Profil zu beenden."
+            )
+
+            try:
+                subprocess.run(
+                    ["pkill", "-TERM", "-f", profile_arg],
+                    check=False,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+
+                time.sleep(2)
+
+                subprocess.run(
+                    ["pkill", "-KILL", "-f", profile_arg],
+                    check=False,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+
+                logger.info("Verwaiste Chromium-Prozesse bereinigt.")
+            except FileNotFoundError:
+                logger.warning("pkill wurde nicht gefunden.")
+
             lock_retry_count = 0
             max_lock_retries = 60
 
