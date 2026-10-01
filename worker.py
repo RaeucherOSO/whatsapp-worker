@@ -4997,7 +4997,7 @@ def start_browser(
                 "Chromium-Profil war gesperrt."
             )
             lock_retry_count = 0
-            max_lock_retries = 12
+            max_lock_retries = 60
 
             while lock_retry_count < max_lock_retries:
                 lock_retry_count += 1
