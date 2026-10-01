@@ -22,10 +22,10 @@ RUN apt-get update -qq \
 
 COPY worker.py .
 
-RUN mkdir -p /app/whatsapp_browser
+RUN mkdir -p /app/whatsapp_browser /app/whatsapp_browser_2
 RUN chown -R pwuser:pwuser /app
 
-VOLUME ["/app/whatsapp_browser"]
+VOLUME ["/app/whatsapp_browser", "/app/whatsapp_browser_2"]
 
 EXPOSE 8080
 

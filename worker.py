@@ -4,12 +4,9 @@ import time
 import threading
 import logging
 import re
-import signal
 import sys
 import subprocess
 import shutil
-import signal
-
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -4903,19 +4900,41 @@ def start_browser(
     global login_status
 
 
-    browser_path = Path(
-        BROWSER_DIR
-    )
+    browser_paths = [
+        Path(BROWSER_DIR),
+        Path(f"{BROWSER_DIR}_2"),
+    ]
 
+    for candidate_path in browser_paths:
+        candidate_path.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
 
-    browser_path.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    browser_path = None
 
+    for candidate_path in browser_paths:
+        lock_path = candidate_path / "SingletonLock"
+
+        if not lock_path.exists():
+            browser_path = candidate_path
+            break
+
+        logger.warning(
+            "Chromium-Profil bereits belegt: %s",
+            candidate_path.absolute(),
+        )
+
+    if browser_path is None:
+        browser_path = browser_paths[0]
+
+        logger.warning(
+            "Beide Chromium-Profile wirken belegt. "
+            "Verwende Profil 1 und lasse den bestehenden Retry-Mechanismus greifen."
+        )
 
     logger.info(
-        "Browser-Profil: %s",
+        "Gew?hltes Browser-Profil: %s",
         browser_path.absolute(),
     )
     launch_args = [
@@ -4997,36 +5016,6 @@ def start_browser(
             logger.warning(
                 "Chromium-Profil war gesperrt."
             )
-            profile_arg = (
-                f"--user-data-dir={browser_path.absolute()}"
-            )
-
-            logger.warning(
-                "Versuche, verwaiste Chromium-Prozesse f?r das "
-                "WhatsApp-Profil zu beenden."
-            )
-
-            try:
-                subprocess.run(
-                    ["pkill", "-TERM", "-f", profile_arg],
-                    check=False,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-
-                time.sleep(2)
-
-                subprocess.run(
-                    ["pkill", "-KILL", "-f", profile_arg],
-                    check=False,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-
-                logger.info("Verwaiste Chromium-Prozesse bereinigt.")
-            except FileNotFoundError:
-                logger.warning("pkill wurde nicht gefunden.")
-
             lock_retry_count = 0
             max_lock_retries = 60
 
