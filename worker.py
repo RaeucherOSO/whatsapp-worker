@@ -4912,194 +4912,118 @@ def start_browser(
             exist_ok=True,
         )
 
+    launch_args = [
+        "--disable-dev-shm-usage",
+        "--no-sandbox",
+        "--disable-blink-features=AutomationControlled",
+        "--disable-gpu",
+        "--no-first-run",
+        "--no-default-browser-check",
+    ]
+
+    max_lock_retries = 60
+    context = None
     browser_path = None
 
-    for candidate_path in browser_paths:
-        lock_path = candidate_path / "SingletonLock"
+    lock_markers = (
+        "SingletonLock",
+        "SingletonCookie",
+        "SingletonSocket",
+        "profile appears to be in use",
+    )
 
-        if not lock_path.exists():
-            browser_path = candidate_path
+    for retry_number in range(1, max_lock_retries + 1):
+
+        for candidate_path in browser_paths:
+
+            logger.info(
+                "Versuche Chromium-Profil: %s",
+                candidate_path.absolute(),
+            )
+
+            try:
+                context = (
+                    playwright.chromium
+                    .launch_persistent_context(
+                        executable_path="/opt/chrome-linux64/chrome",
+                        user_data_dir=str(
+                            candidate_path.absolute()
+                        ),
+                        headless=HEADLESS,
+                        no_viewport=True,
+                        args=launch_args,
+                    )
+                )
+
+                browser_path = candidate_path
+
+                logger.info(
+                    "Chromium erfolgreich gestartet mit Profil: %s",
+                    browser_path.absolute(),
+                )
+
+                break
+
+            except Exception as e:
+
+                error_text = str(e)
+
+                if not any(
+                    marker in error_text
+                    for marker in lock_markers
+                ):
+                    raise
+
+                logger.warning(
+                    "Chromium-Profil belegt: %s",
+                    candidate_path.absolute(),
+                )
+
+                context = None
+
+        if context is not None:
             break
 
-        logger.warning(
-            "Chromium-Profil bereits belegt: %s",
-            candidate_path.absolute(),
-        )
+        if retry_number < max_lock_retries:
+            logger.warning(
+                "Beide Chromium-Profile sind belegt. "
+                "Warte 5 Sekunden. Versuch %s/%s.",
+                retry_number,
+                max_lock_retries,
+            )
 
-    if browser_path is None:
-        browser_path = browser_paths[0]
+            time.sleep(5)
 
-        logger.warning(
-            "Beide Chromium-Profile wirken belegt. "
-            "Verwende Profil 1 und lasse den bestehenden Retry-Mechanismus greifen."
+    if context is None:
+        raise RuntimeError(
+            "Keines der beiden Chromium-Profile konnte gestartet werden."
         )
 
     logger.info(
         "Gew?hltes Browser-Profil: %s",
         browser_path.absolute(),
     )
-    launch_args = [
 
-        "--disable-dev-shm-usage",
+    if context.pages:
 
-        "--no-sandbox",
+        page = context.pages[0]
 
-        "--disable-blink-features=AutomationControlled",
+    else:
 
-        "--disable-gpu",
+        page = context.new_page()
 
-        "--no-first-run",
+    browser_page = page
 
-        "--no-default-browser-check",
-    ]
+    login_status = "browser_started"
 
+    logger.info(
+        "Chromium erfolgreich gestartet."
+    )
 
-    try:
-
-        context = (
-            playwright.chromium
-            .launch_persistent_context(
-                executable_path="/opt/chrome-linux64/chrome",
-                user_data_dir=str(
-                    browser_path.absolute()
-                ),
-
-                headless=HEADLESS,
-
-                no_viewport=True,
+    return context
 
 
-                args=launch_args,
-            )
-        )
 
-
-        if context.pages:
-
-            page = context.pages[0]
-
-        else:
-
-            page = context.new_page()
-
-
-        browser_page = page
-
-        login_status = "browser_started"
-
-
-        logger.info(
-            "Chromium erfolgreich gestartet."
-        )
-
-
-        return context
-
-
-    except Exception as e:
-
-        error_text = str(
-            e
-        )
-
-
-        if (
-            "SingletonLock"
-            in error_text
-            or "SingletonCookie"
-            in error_text
-            or "SingletonSocket"
-            in error_text
-            or "profile appears to be in use"
-            in error_text
-        ):
-
-            logger.warning(
-                "Chromium-Profil war gesperrt."
-            )
-            lock_retry_count = 0
-            max_lock_retries = 60
-
-            while lock_retry_count < max_lock_retries:
-                lock_retry_count += 1
-
-                logger.warning(
-                    "Warte auf Freigabe des Chromium-Profils. "
-                    "Versuch %s/%s.",
-                    lock_retry_count,
-                    max_lock_retries,
-                )
-
-                time.sleep(5)
-
-                try:
-                    context = (
-                        playwright.chromium
-                        .launch_persistent_context(
-			    executable_path="/opt/chrome-linux64/chrome",
-                            user_data_dir=str(
-                                browser_path.absolute()
-                            ),
-                            headless=HEADLESS,
-                            no_viewport=True,
-                            args=launch_args,
-                        )
-                    )
-
-                    logger.info(
-                        "Chromium-Profil wurde erfolgreich freigegeben."
-                    )
-
-                    break
-
-                except Exception as retry_error:
-                    retry_text = str(retry_error)
-
-                    if (
-                        "SingletonLock" not in retry_text
-                        and "SingletonCookie" not in retry_text
-                        and "SingletonSocket" not in retry_text
-                        and "profile appears to be in use"
-                        not in retry_text
-                    ):
-                        raise
-
-                    logger.warning(
-                        "Chromium-Profil weiterhin gesperrt."
-                    )
-
-            else:
-                raise RuntimeError(
-                    "Chromium-Profil blieb trotz mehrerer Versuche "
-                    "gesperrt."
-                )
-
-
-            if context.pages:
-
-                page = context.pages[0]
-
-            else:
-
-                page = context.new_page()
-
-
-            browser_page = page
-
-            login_status = (
-                "browser_started"
-            )
-
-
-            logger.info(
-                "Chromium nach Lock-Cleanup erfolgreich gestartet."
-            )
-
-
-            return context
-
-
-        raise
 
 
 # ============================================================
