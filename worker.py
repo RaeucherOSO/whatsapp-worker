@@ -4,6 +4,7 @@ import time
 import threading
 import logging
 import re
+import signal
 import sys
 import subprocess
 import shutil
